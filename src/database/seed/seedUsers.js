@@ -87,9 +87,9 @@ const seedUsers = async () => {
         }
 
         console.log(`\nKullanıcı Özeti:`);
-        console.log(`   - Admin: admin@example.com (${adminRole.displayName})`);
-        console.log(`   - Moderator: moderator@example.com (${moderatorRole.displayName})`);
-        console.log(`   - Test User: test@example.com (${userRole.displayName})`);
+        console.log(`   - Admin: admin@example.com (${adminRole.name})`);
+        console.log(`   - Moderator: moderator@example.com (${moderatorRole.name})`);
+        console.log(`   - Test User: test@example.com (${userRole.name})`);
 
         console.log('Kullanıcılar seed işlemi tamamlandı!');
         return createdUsers;

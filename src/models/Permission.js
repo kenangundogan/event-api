@@ -1,30 +1,10 @@
 const mongoose = require('mongoose');
 
 const permissionSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, 'İzin adı zorunludur'],
-        unique: true,
-        trim: true,
-        lowercase: true,
-        maxlength: [100, 'İzin adı 100 karakterden uzun olamaz']
-    },
-    displayName: {
-        type: String,
-        required: [true, 'Görünen ad zorunludur'],
-        trim: true,
-        maxlength: [200, 'Görünen ad 200 karakterden uzun olamaz']
-    },
     description: {
         type: String,
         trim: true,
         maxlength: [500, 'Açıklama 500 karakterden uzun olamaz']
-    },
-    category: {
-        type: String,
-        required: [true, 'Kategori zorunludur'],
-        enum: ['user', 'event', 'category', 'system', 'other'],
-        default: 'other'
     },
     resource: {
         type: String,
@@ -42,10 +22,6 @@ const permissionSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
-    isSystem: {
-        type: Boolean,
-        default: false
-    },
     priority: {
         type: Number,
         default: 0,
@@ -57,40 +33,23 @@ const permissionSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Index'ler (unique: true zaten index oluşturduğu için name index'ini kaldırdık)
-permissionSchema.index({ category: 1, resource: 1, action: 1 });
+// Index'ler
+permissionSchema.index({ resource: 1, action: 1 });
 permissionSchema.index({ isActive: 1 });
 
-// Virtual field for full permission name
-permissionSchema.virtual('fullName').get(function () {
+// Virtual field for permission name (using fullName format)
+permissionSchema.virtual('name').get(function () {
     return `${this.resource}:${this.action}`;
 });
 
-// Virtual field for category display
-permissionSchema.virtual('categoryDisplay').get(function () {
-    const categories = {
-        user: 'Kullanıcı Yönetimi',
-        event: 'Etkinlik Yönetimi',
-        category: 'Kategori Yönetimi',
-        system: 'Sistem Yönetimi',
-        other: 'Diğer'
-    };
-    return categories[this.category] || this.category;
-});
-
-// Static method - kategoriye göre izinleri getir
-permissionSchema.statics.getByCategory = function (category) {
-    return this.find({ category, isActive: true }).sort({ priority: -1, name: 1 });
+// Static method - kaynağa göre izinleri getir
+permissionSchema.statics.getByResource = function (resource) {
+    return this.find({ resource, isActive: true }).sort({ priority: -1, resource: 1, action: 1 });
 };
 
 // Static method - aktif izinleri getir
 permissionSchema.statics.getActive = function () {
-    return this.find({ isActive: true }).sort({ category: 1, priority: -1, name: 1 });
-};
-
-// Static method - sistem izinlerini getir
-permissionSchema.statics.getSystemPermissions = function () {
-    return this.find({ isSystem: true, isActive: true });
+    return this.find({ isActive: true }).sort({ resource: 1, priority: -1, action: 1 });
 };
 
 // Instance method - izin kontrolü

@@ -9,12 +9,6 @@ const roleSchema = new mongoose.Schema({
         lowercase: true,
         maxlength: [50, 'Rol adı 50 karakterden uzun olamaz']
     },
-    displayName: {
-        type: String,
-        required: [true, 'Görünen ad zorunludur'],
-        trim: true,
-        maxlength: [100, 'Görünen ad 100 karakterden uzun olamaz']
-    },
     description: {
         type: String,
         trim: true,
@@ -44,7 +38,6 @@ const roleSchema = new mongoose.Schema({
 });
 
 // Index'ler
-// Index'ler (unique: true zaten index oluşturduğu için name index'ini kaldırdık)
 roleSchema.index({ isActive: 1 });
 roleSchema.index({ priority: -1 });
 
@@ -70,7 +63,7 @@ roleSchema.methods.hasPermission = async function (permissionName) {
 
     // String permission kontrolü (geriye uyumluluk için)
     if (typeof permissionName === 'string') {
-        return this.permissions.some(p => p.fullName === permissionName);
+        return this.permissions.some(p => p.name === permissionName);
     }
 
     // ObjectId permission kontrolü
@@ -84,7 +77,7 @@ roleSchema.methods.hasAnyPermission = async function (permissionNames) {
 
     return permissionNames.some(permissionName => {
         if (typeof permissionName === 'string') {
-            return this.permissions.some(p => p.fullName === permissionName);
+            return this.permissions.some(p => p.name === permissionName);
         }
         return this.permissions.some(p => p._id.toString() === permissionName.toString());
     });
@@ -97,7 +90,7 @@ roleSchema.methods.hasAllPermissions = async function (permissionNames) {
 
     return permissionNames.every(permissionName => {
         if (typeof permissionName === 'string') {
-            return this.permissions.some(p => p.fullName === permissionName);
+            return this.permissions.some(p => p.name === permissionName);
         }
         return this.permissions.some(p => p._id.toString() === permissionName.toString());
     });
@@ -109,11 +102,11 @@ roleSchema.methods.getPermissions = async function () {
     return this.permissions || [];
 };
 
-// Instance method - kategoriye göre izinleri getir
-roleSchema.methods.getPermissionsByCategory = async function (category) {
+// Instance method - kaynağa göre izinleri getir
+roleSchema.methods.getPermissionsByResource = async function (resource) {
     await this.populate('permissions');
     if (!this.permissions) return [];
-    return this.permissions.filter(p => p.category === category);
+    return this.permissions.filter(p => p.resource === resource);
 };
 
 module.exports = mongoose.model('Role', roleSchema); 

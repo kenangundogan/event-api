@@ -237,7 +237,6 @@ curl -X POST http://localhost:3000/api/roles \
   -H "Authorization: Bearer <admin-jwt-token>" \
   -d '{
     "name": "editor",
-    "displayName": "Editör",
     "description": "İçerik editörü rolü",
     "permissions": ["event:read", "event:create", "event:update", "event:list"],
     "priority": 25
@@ -271,7 +270,6 @@ curl -X POST http://localhost:3000/api/permissions \
   -H "Authorization: Bearer <admin-jwt-token>" \
   -d '{
     "name": "event_approve",
-    "displayName": "Etkinlik Onaylama",
     "description": "Etkinlikleri onaylama izni",
     "category": "event",
     "resource": "event",

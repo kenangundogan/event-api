@@ -14,16 +14,6 @@ const createRoleSchema = Joi.object({
             'any.required': 'Rol adı zorunludur'
         }),
 
-    displayName: Joi.string()
-        .min(2)
-        .max(100)
-        .required()
-        .messages({
-            'string.min': 'Görünen ad en az 2 karakter olmalıdır',
-            'string.max': 'Görünen ad 100 karakterden uzun olamaz',
-            'any.required': 'Görünen ad zorunludur'
-        }),
-
     description: Joi.string()
         .max(500)
         .optional()
@@ -88,15 +78,6 @@ const updateRoleSchema = Joi.object({
             'string.min': 'Rol adı en az 2 karakter olmalıdır',
             'string.max': 'Rol adı 50 karakterden uzun olamaz',
             'string.pattern.base': 'Rol adı sadece küçük harf, rakam, tire ve alt çizgi içerebilir'
-        }),
-
-    displayName: Joi.string()
-        .min(2)
-        .max(100)
-        .optional()
-        .messages({
-            'string.min': 'Görünen ad en az 2 karakter olmalıdır',
-            'string.max': 'Görünen ad 100 karakterden uzun olamaz'
         }),
 
     description: Joi.string()

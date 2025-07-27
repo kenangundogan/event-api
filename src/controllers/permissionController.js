@@ -5,15 +5,15 @@ class PermissionController {
     // Tüm izinleri getir
     async getAllPermissions(req, res) {
         try {
-            const { category } = req.query;
+            const { resource } = req.query;
 
             let query = { isActive: true };
-            if (category) {
-                query.category = category;
+            if (resource) {
+                query.resource = resource;
             }
 
             const permissions = await Permission.find(query)
-                .sort({ category: 1, priority: -1, name: 1 });
+                .sort({ resource: 1, priority: -1, action: 1 });
 
             res.status(200).json({
                 success: true,
@@ -67,6 +67,19 @@ class PermissionController {
                 });
             }
 
+            // Aynı resource ve action kombinasyonu var mı kontrol et
+            const existingPermission = await Permission.findOne({
+                resource: value.resource,
+                action: value.action
+            });
+
+            if (existingPermission) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'Bu resource ve action kombinasyonu zaten mevcut'
+                });
+            }
+
             const permission = new Permission(value);
             await permission.save();
 
@@ -76,13 +89,6 @@ class PermissionController {
                 data: permission
             });
         } catch (error) {
-            if (error.code === 11000) {
-                return res.status(409).json({
-                    success: false,
-                    message: 'Bu izin adı zaten kullanılıyor'
-                });
-            }
-
             res.status(500).json({
                 success: false,
                 message: 'İzin oluşturulurken hata oluştu',
@@ -105,6 +111,22 @@ class PermissionController {
                 });
             }
 
+            // Eğer resource veya action değişiyorsa, çakışma kontrolü yap
+            if (value.resource || value.action) {
+                const existingPermission = await Permission.findOne({
+                    resource: value.resource || (await Permission.findById(id)).resource,
+                    action: value.action || (await Permission.findById(id)).action,
+                    _id: { $ne: id }
+                });
+
+                if (existingPermission) {
+                    return res.status(409).json({
+                        success: false,
+                        message: 'Bu resource ve action kombinasyonu zaten mevcut'
+                    });
+                }
+            }
+
             const permission = await Permission.findByIdAndUpdate(
                 id,
                 value,
@@ -124,13 +146,6 @@ class PermissionController {
                 data: permission
             });
         } catch (error) {
-            if (error.code === 11000) {
-                return res.status(409).json({
-                    success: false,
-                    message: 'Bu izin adı zaten kullanılıyor'
-                });
-            }
-
             res.status(500).json({
                 success: false,
                 message: 'İzin güncellenirken hata oluştu',
@@ -139,16 +154,12 @@ class PermissionController {
         }
     }
 
-    // İzin sil (soft delete)
+    // İzin sil
     async deletePermission(req, res) {
         try {
             const { id } = req.params;
 
-            const permission = await Permission.findByIdAndUpdate(
-                id,
-                { isActive: false },
-                { new: true }
-            );
+            const permission = await Permission.findByIdAndDelete(id);
 
             if (!permission) {
                 return res.status(404).json({
@@ -159,8 +170,7 @@ class PermissionController {
 
             res.status(200).json({
                 success: true,
-                message: 'İzin başarıyla silindi',
-                data: permission
+                message: 'İzin başarıyla silindi'
             });
         } catch (error) {
             res.status(500).json({
@@ -171,12 +181,12 @@ class PermissionController {
         }
     }
 
-    // Kategoriye göre izinleri getir
-    async getPermissionsByCategory(req, res) {
+    // Kaynağa göre izinleri getir
+    async getPermissionsByResource(req, res) {
         try {
-            const { category } = req.params;
+            const { resource } = req.params;
 
-            const permissions = await Permission.getByCategory(category);
+            const permissions = await Permission.getByResource(resource);
 
             res.status(200).json({
                 success: true,
@@ -185,25 +195,7 @@ class PermissionController {
         } catch (error) {
             res.status(500).json({
                 success: false,
-                message: 'Kategori izinleri getirilirken hata oluştu',
-                error: error.message
-            });
-        }
-    }
-
-    // Sistem izinlerini getir
-    async getSystemPermissions(req, res) {
-        try {
-            const permissions = await Permission.getSystemPermissions();
-
-            res.status(200).json({
-                success: true,
-                data: permissions
-            });
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: 'Sistem izinleri getirilirken hata oluştu',
+                message: 'Kaynak izinleri getirilirken hata oluştu',
                 error: error.message
             });
         }

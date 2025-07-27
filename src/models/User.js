@@ -152,10 +152,4 @@ userSchema.methods.getRoleName = async function () {
     return this.role ? this.role.name : null;
 };
 
-// Instance method - kullanıcının rol görünen adını getir
-userSchema.methods.getRoleDisplayName = async function () {
-    await this.populate('role');
-    return this.role ? this.role.displayName : null;
-};
-
 module.exports = mongoose.model('User', userSchema); 

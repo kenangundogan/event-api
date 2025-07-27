@@ -14,14 +14,13 @@ const seedRoles = async () => {
         const permissions = await Permission.find({ isActive: true });
         const permissionMap = {};
         permissions.forEach(p => {
-            permissionMap[p.fullName] = p._id;
+            permissionMap[p.name] = p._id;
         });
 
         // Varsayılan rolleri oluştur
         const roles = [
             {
                 name: 'user',
-                displayName: 'Kullanıcı',
                 description: 'Standart kullanıcı rolü',
                 permissions: [
                     permissionMap['user:read'],
@@ -36,7 +35,6 @@ const seedRoles = async () => {
             },
             {
                 name: 'moderator',
-                displayName: 'Moderatör',
                 description: 'Moderatör rolü - sınırlı yönetici yetkileri',
                 permissions: [
                     permissionMap['user:read'],
@@ -57,7 +55,6 @@ const seedRoles = async () => {
             },
             {
                 name: 'admin',
-                displayName: 'Yönetici',
                 description: 'Tam yönetici rolü - tüm yetkilere sahip',
                 permissions: [
                     permissionMap['user:read'],

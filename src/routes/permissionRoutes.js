@@ -4,8 +4,7 @@ const permissionController = require('../controllers/permissionController');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
 // Public routes
-router.get('/system', permissionController.getSystemPermissions);
-router.get('/category/:category', permissionController.getPermissionsByCategory);
+router.get('/resource/:resource', permissionController.getPermissionsByResource);
 router.get('/check/:resource/:action', permissionController.checkPermission);
 
 // Admin routes
