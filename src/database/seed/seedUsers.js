@@ -1,16 +1,18 @@
 const User = require('../../models/User');
-const Role = require('../../models/Role');  
+const Role = require('../../models/Role');
 
 const seedUsers = async () => {
     try {
         console.log('Kullanıcılar oluşturuluyor...');
 
-        // Rolleri al
-        const userRole = await Role.findOne({ name: 'user' });
-        const adminRole = await Role.findOne({ name: 'admin' });
-        const moderatorRole = await Role.findOne({ name: 'moderator' });
+        // Mevcut kullanıcıları temizle
+        await User.deleteMany({});
+        console.log('Mevcut kullanıcılar temizlendi');
 
-        if (!userRole || !adminRole || !moderatorRole) {
+        // Rolleri al
+        const roles = await Role.find({});
+
+        if (!roles) {
             throw new Error('Gerekli roller bulunamadı! Önce rolleri oluşturun.');
         }
 
@@ -21,7 +23,7 @@ const seedUsers = async () => {
                 lastName: 'User',
                 email: 'admin@example.com',
                 password: 'AdminPass123',
-                role: adminRole._id,
+                role: roles.find(r => r.name === 'admin')._id,
                 isActive: true,
                 isEmailVerified: true,
                 preferences: {
@@ -38,7 +40,7 @@ const seedUsers = async () => {
                 lastName: 'User',
                 email: 'moderator@example.com',
                 password: 'ModeratorPass123',
-                role: moderatorRole._id,
+                role: roles.find(r => r.name === 'moderator')._id,
                 isActive: true,
                 isEmailVerified: true,
                 preferences: {
@@ -55,7 +57,7 @@ const seedUsers = async () => {
                 lastName: 'User',
                 email: 'test@example.com',
                 password: 'TestPass123',
-                role: userRole._id,
+                role: roles.find(r => r.name === 'user')._id,
                 isActive: true,
                 isEmailVerified: true,
                 preferences: {
@@ -69,32 +71,23 @@ const seedUsers = async () => {
             }
         ];
 
-        // Mevcut kullanıcıları kontrol et ve yoksa oluştur
+        // Her kullanıcıyı ayrı ayrı oluştur (middleware çalışması için)
         const createdUsers = [];
         for (const userData of users) {
-            const existingUser = await User.findOne({ email: userData.email });
-            if (!existingUser) {
-                const user = new User(userData);
-                await user.save();
-                createdUsers.push(user);
-                console.log(`Kullanıcı oluşturuldu: ${user.email} (${user.role.name || 'role yok'})`);
-            } else {
-                // Mevcut kullanıcının rolünü güncelle
-                existingUser.role = userData.role;
-                await existingUser.save();
-                console.log(`Kullanıcı güncellendi: ${existingUser.email} (${existingUser.role.name || 'role yok'})`);
-            }
+            const user = new User(userData);
+            await user.save();
+            createdUsers.push(user);
         }
-
-        console.log(`\nKullanıcı Özeti:`);
-        console.log(`   - Admin: admin@example.com (${adminRole.name})`);
-        console.log(`   - Moderator: moderator@example.com (${moderatorRole.name})`);
-        console.log(`   - Test User: test@example.com (${userRole.name})`);
-
-        console.log('Kullanıcılar seed işlemi tamamlandı!');
+        
+        console.log(`Kullanıcılar başarıyla oluşturuldu! (${createdUsers.length})`);
+        createdUsers.forEach(user => {
+            const role = roles.find(r => r._id.toString() === user.role.toString());
+            console.log(` - ${user.email} (${role ? role.name : 'role yok'})`);
+        });
+        console.log(`----------------------------------------------------------------`);
         return createdUsers;
     } catch (error) {
-        console.error('Kullanıcı oluşturma hatası:', error.message);
+        console.error('Hata:', error.message);
         throw error;
     }
 };

@@ -7,11 +7,12 @@ const {
     loginSchema,
     userQuerySchema
 } = require('../validations/userValidation');
+const { queryBuilder } = require('../utils/queryBuilder');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 class UserController {
-    // Tüm kullanıcıları getir (sayfalama ile)
+    // Tüm kullanıcıları getir (profesyonel query builder ile)
     async getAllUsers(req, res) {
         try {
             const { error, value } = userQuerySchema.validate(req.query);
@@ -23,42 +24,64 @@ class UserController {
                 });
             }
 
-            const { page, limit, search, role, isActive, sortBy, sortOrder } = value;
-            const skip = (page - 1) * limit;
+            const { 
+                page, 
+                limit, 
+                select,
+                with: relations,
+                filter,
+                sort
+            } = value;
 
-            // Filtreleme kriterleri
-            const filter = {};
-            if (search) {
-                filter.$or = [
-                    { firstName: { $regex: search, $options: 'i' } },
-                    { lastName: { $regex: search, $options: 'i' } },
-                    { email: { $regex: search, $options: 'i' } }
-                ];
+            // Query Builder başlat
+            const query = queryBuilder(User)
+                .setPath('/api/users')
+                .setSortAliases({
+                    'first-name-length': { field: 'firstName', type: 'stringLength' },
+                    'last-name-length': { field: 'lastName', type: 'stringLength' },
+                    'email-length': { field: 'email', type: 'stringLength' },
+                    'created-recent': { field: 'createdAt', type: 'date' }
+                })
+                .setQueryParams({
+                    ...(req.query.with && { with: req.query.with }),
+                    ...(req.query.limit && { limit: req.query.limit }),
+                    ...(req.query.filter && { filter: req.query.filter }),
+                    ...(req.query.sort && { sort: req.query.sort })
+                });
+
+            // Filtreleme
+            if (filter) {
+                query.applyFilters(filter, req.query);
             }
-            if (role) filter.role = role;
-            if (isActive !== undefined) filter.isActive = isActive;
 
             // Sıralama
-            const sort = {};
-            sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+            if (sort) {
+                query.applySort(sort);
+            }
 
-            const users = await User.find(filter)
-                .select('-password')
-                .sort(sort)
-                .skip(skip)
-                .limit(limit);
+            // Alan seçimi
+            if (select) {
+                query.select(select);
+            } else {
+                // Varsayılan olarak password hariç tut
+                query.select('-password');
+            }
 
-            const total = await User.countDocuments(filter);
+            // İlişkiler
+            if (relations) {
+                query.with(relations);
+            }
+
+            // Sayfalama
+            query.paginate(page, limit);
+
+            // Sorguyu çalıştır
+            const result = await query.get();
 
             res.status(200).json({
                 success: true,
-                data: users,
-                pagination: {
-                    page,
-                    limit,
-                    total,
-                    totalPages: Math.ceil(total / limit)
-                }
+                data: result.data,
+                pagination: result.pagination
             });
         } catch (error) {
             res.status(500).json({
@@ -73,8 +96,24 @@ class UserController {
     async getUserById(req, res) {
         try {
             const { id } = req.params;
+            const { select, with: relations } = req.query;
 
-            const user = await User.findById(id).select('-password');
+            const query = queryBuilder(User)
+                .where('_id', id);
+
+            // Alan seçimi
+            if (select) {
+                query.select(select);
+            } else {
+                query.select('-password');
+            }
+
+            // İlişkiler
+            if (relations) {
+                query.with(relations);
+            }
+
+            const user = await query.first();
 
             if (!user) {
                 return res.status(404).json({
@@ -108,30 +147,30 @@ class UserController {
                 });
             }
 
-                  // Email kontrolü
-      const existingUser = await User.findByEmail(value.email);
-      if (existingUser) {
-        return res.status(409).json({
-          success: false,
-          message: 'Bu email adresi zaten kullanılıyor'
-        });
-      }
+            // Email kontrolü
+            const existingUser = await User.findOne({ email: value.email });
+            if (existingUser) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'Bu email adresi zaten kullanılıyor'
+                });
+            }
 
-      // Varsayılan role'ü al
-      const Role = require('../models/Role');
-      const defaultRole = await Role.getDefaultRole();
-      
-      if (!defaultRole) {
-        return res.status(500).json({
-          success: false,
-          message: 'Varsayılan rol bulunamadı'
-        });
-      }
+            // Varsayılan role'ü al
+            const Role = require('../models/Role');
+            const defaultRole = await Role.getDefaultRole();
+            
+            if (!defaultRole) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Varsayılan rol bulunamadı'
+                });
+            }
 
-      // Kullanıcıyı varsayılan role ile oluştur
-      const userData = { ...value, role: defaultRole._id };
-      const user = new User(userData);
-      await user.save();
+            // Kullanıcıyı varsayılan role ile oluştur
+            const userData = { ...value, role: defaultRole._id };
+            const user = new User(userData);
+            await user.save();
 
             res.status(201).json({
                 success: true,
@@ -255,17 +294,16 @@ class UserController {
             if (error) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Geçersiz giriş bilgileri',
+                    message: 'Geçersiz veri',
                     errors: error.details.map(detail => detail.message)
                 });
             }
 
             const { email, password } = value;
 
-            // Kullanıcıyı şifre ile birlikte getir
-            const user = await User.findOne({ email }).select('+password');
-
-            if (!user || !user.isActive) {
+            // Kullanıcıyı bul (password dahil)
+            const user = await User.findOne({ email }).select('+password').populate('role');
+            if (!user) {
                 return res.status(401).json({
                     success: false,
                     message: 'Geçersiz email veya şifre'
@@ -273,7 +311,7 @@ class UserController {
             }
 
             // Şifre kontrolü
-            const isPasswordValid = await user.comparePassword(password);
+            const isPasswordValid = await bcrypt.compare(password, user.password);
             if (!isPasswordValid) {
                 return res.status(401).json({
                     success: false,
@@ -281,28 +319,38 @@ class UserController {
                 });
             }
 
-            // Son giriş zamanını güncelle
-            await user.updateLastLogin();
+            // Kullanıcı aktif mi kontrol et
+            if (!user.isActive) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Hesabınız aktif değil'
+                });
+            }
 
-                  // Kullanıcının rol adını al
-      const roleName = await user.getRoleName();
-
-      // JWT token oluştur
-      const token = jwt.sign(
-        { 
-          userId: user._id, 
-          email: user.email, 
-          role: roleName
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: '24h' }
-      );
+            // JWT token oluştur
+            const token = jwt.sign(
+                { 
+                    userId: user._id,
+                    email: user.email,
+                    role: user.role?.name || 'user'
+                },
+                process.env.JWT_SECRET,
+                { expiresIn: '24h' }
+            );
 
             res.status(200).json({
                 success: true,
                 message: 'Giriş başarılı',
                 data: {
-                    user: user.toResponse(),
+                    user: {
+                        id: user._id,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        email: user.email,
+                        role: user.role?.name || 'user',
+                        isActive: user.isActive,
+                        isEmailVerified: user.isEmailVerified
+                    },
                     token
                 }
             });
@@ -315,7 +363,7 @@ class UserController {
         }
     }
 
-    // Şifre değiştirme
+    // Şifre değiştirme (admin)
     async changePassword(req, res) {
         try {
             const { id } = req.params;
@@ -329,11 +377,18 @@ class UserController {
                 });
             }
 
-            const { currentPassword, newPassword } = value;
+            const { newPassword, confirmPassword } = value;
 
-            // Kullanıcıyı şifre ile birlikte getir
-            const user = await User.findById(id).select('+password');
+            // Şifre eşleşme kontrolü
+            if (newPassword !== confirmPassword) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Şifreler eşleşmiyor'
+                });
+            }
 
+            // Kullanıcıyı bul
+            const user = await User.findById(id);
             if (!user) {
                 return res.status(404).json({
                     success: false,
@@ -341,18 +396,11 @@ class UserController {
                 });
             }
 
-            // Mevcut şifre kontrolü
-            const isCurrentPasswordValid = await user.comparePassword(currentPassword);
-            if (!isCurrentPasswordValid) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Mevcut şifre yanlış'
-                });
-            }
-
             // Yeni şifreyi hash'le
-            const salt = await bcrypt.genSalt(12);
-            user.password = await bcrypt.hash(newPassword, salt);
+            const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+            // Şifreyi güncelle
+            user.password = hashedPassword;
             await user.save();
 
             res.status(200).json({
@@ -368,12 +416,14 @@ class UserController {
         }
     }
 
-    // Kullanıcı profilini getir
+    // Kullanıcı profili getir
     async getProfile(req, res) {
         try {
-            const userId = req.user.userId; // JWT'den gelen kullanıcı ID'si
+            const userId = req.user.userId;
 
-            const user = await User.findById(userId).select('-password');
+            const user = await User.findById(userId)
+                .select('-password')
+                .populate('role');
 
             if (!user) {
                 return res.status(404).json({
@@ -395,7 +445,7 @@ class UserController {
         }
     }
 
-    // Kullanıcı kendi profilini güncelle
+    // Kendi profilini güncelle
     async updateProfile(req, res) {
         try {
             const userId = req.user.userId;
@@ -409,16 +459,6 @@ class UserController {
                 });
             }
 
-            // Kullanıcının sadece kendi bilgilerini güncelleyebilmesi için kısıtlamalar
-            const allowedFields = ['firstName', 'lastName', 'phone', 'preferences'];
-            const filteredData = {};
-
-            Object.keys(value).forEach(key => {
-                if (allowedFields.includes(key)) {
-                    filteredData[key] = value[key];
-                }
-            });
-
             // Email değişikliği varsa kontrol et
             if (value.email) {
                 const existingUser = await User.findOne({
@@ -431,21 +471,13 @@ class UserController {
                         message: 'Bu email adresi zaten kullanılıyor'
                     });
                 }
-                filteredData.email = value.email;
             }
 
             const user = await User.findByIdAndUpdate(
                 userId,
-                filteredData,
+                value,
                 { new: true, runValidators: true }
             ).select('-password');
-
-            if (!user) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Kullanıcı bulunamadı'
-                });
-            }
 
             res.status(200).json({
                 success: true,
@@ -468,7 +500,7 @@ class UserController {
         }
     }
 
-    // Kullanıcı kendi şifresini değiştir
+    // Kendi şifresini değiştir
     async changeOwnPassword(req, res) {
         try {
             const userId = req.user.userId;
@@ -482,11 +514,18 @@ class UserController {
                 });
             }
 
-            const { currentPassword, newPassword } = value;
+            const { currentPassword, newPassword, confirmPassword } = value;
 
-            // Kullanıcıyı şifre ile birlikte getir
+            // Şifre eşleşme kontrolü
+            if (newPassword !== confirmPassword) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Yeni şifreler eşleşmiyor'
+                });
+            }
+
+            // Kullanıcıyı bul (password dahil)
             const user = await User.findById(userId).select('+password');
-
             if (!user) {
                 return res.status(404).json({
                     success: false,
@@ -495,21 +534,23 @@ class UserController {
             }
 
             // Mevcut şifre kontrolü
-            const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+            const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
             if (!isCurrentPasswordValid) {
-                return res.status(401).json({
+                return res.status(400).json({
                     success: false,
                     message: 'Mevcut şifre yanlış'
                 });
             }
 
-            // Yeni şifreyi doğrudan set et (middleware otomatik hash'leyecek)
-            user.password = newPassword;
-            await user.save();
+            // Yeni şifreyi hash'le
+            const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+            // Şifreyi güncelle
+            await User.findByIdAndUpdate(userId, { password: hashedPassword });
 
             res.status(200).json({
                 success: true,
-                message: 'Şifre başarıyla değiştirildi'
+                message: 'Şifreniz başarıyla değiştirildi'
             });
         } catch (error) {
             res.status(500).json({

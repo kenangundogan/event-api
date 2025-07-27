@@ -208,11 +208,10 @@ const loginSchema = Joi.object({
 const userQuerySchema = Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(100).default(10),
-    search: Joi.string().optional(),
-    role: Joi.string().valid('user', 'admin', 'moderator').optional(),
-    isActive: Joi.boolean().optional(),
-    sortBy: Joi.string().valid('firstName', 'lastName', 'email', 'createdAt').default('createdAt'),
-    sortOrder: Joi.string().valid('asc', 'desc').default('desc')
+    select: Joi.string().optional(),
+    with: Joi.string().optional(),
+    filter: Joi.alternatives().try(Joi.object(), Joi.string()).optional(),
+    sort: Joi.string().optional()
 });
 
 module.exports = {

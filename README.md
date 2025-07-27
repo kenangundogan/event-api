@@ -15,6 +15,7 @@ Professional standartlara uygun Express.js API projesi.
 - **Security** - Helmet ile güvenlik
 - **Logging** - Morgan ile loglama
 - **CORS** - Cross-origin resource sharing
+- **Query Builder** - Laravel benzeri profesyonel sorgu oluşturucu
 
 ## 📁 Proje Yapısı
 
@@ -41,6 +42,9 @@ src/
 │   ├── userValidation.js   # User validation şemaları
 │   ├── roleValidation.js   # Role validation şemaları
 │   └── permissionValidation.js # Permission validation şemaları
+├── utils/
+│   ├── queryBuilder.js     # Profesyonel Query Builder
+│   └── secretKey.js        # JWT secret key generator
 ├── database/
 │   └── seed/
 │       ├── index.js           # Ana seed dosyası
@@ -275,6 +279,176 @@ curl -X POST http://localhost:3000/api/permissions \
     "action": "approve",
     "priority": 35
   }'
+```
+
+## 🔍 Query Builder Kullanımı
+
+### User Controller Query Builder Örnekleri
+
+#### Basit Kullanıcı Listesi
+```bash
+curl -X GET "http://localhost:3000/api/users?page=1&limit=10" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+```
+
+#### Arama ile Kullanıcı Listesi
+```bash
+curl -X GET "http://localhost:3000/api/users?filter={\"firstName\":{\"like\":\"ahmet\"}}&page=1&limit=5" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+```
+
+#### Rol Filtresi ile Kullanıcı Listesi
+```bash
+curl -X GET "http://localhost:3000/api/users?filter={\"role\":\"admin\",\"isActive\":true}&page=1" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+```
+
+#### Sıralama ile Kullanıcı Listesi
+```bash
+curl -X GET "http://localhost:3000/api/users?sort=firstName&page=1&limit=20" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+```
+
+#### Alan Seçimi ile Kullanıcı Listesi
+```bash
+# Sadece belirli alanları getir
+curl -X GET "http://localhost:3000/api/users?select=firstName,lastName,email&page=1&limit=10" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+
+# Password hariç tüm alanları getir
+curl -X GET "http://localhost:3000/api/users?select=-password,-__v&page=1&limit=10" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+
+# Varsayılan olarak password hariç tutulur
+curl -X GET "http://localhost:3000/api/users?page=1&limit=10" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+```
+
+#### İlişkiler ile Kullanıcı Listesi
+```bash
+# Role bilgisi ile birlikte getir
+curl -X GET "http://localhost:3000/api/users?with=role&page=1&limit=10" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+```
+
+#### Karmaşık Sorgu Örneği
+```bash
+curl -X GET "http://localhost:3000/api/users?search=admin&role=admin&isActive=true&sortBy=createdAt&sortOrder=desc&select=firstName,lastName,email,role&with=role&page=1&limit=5" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+```
+
+### 🚀 Gelişmiş Filtreleme ve Sıralama (Laravel Benzeri)
+
+#### Gelişmiş Filtreleme
+```bash
+# Basit eşitlik (Array formatı)
+curl -X GET "http://localhost:3000/api/users?filter[firstName]=Admin&page=1" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+
+# Çoklu değer (Array formatı)
+curl -X GET "http://localhost:3000/api/users?filter[firstName]=Admin,Test&page=1" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+
+# JSON formatında gelişmiş filtreleme
+curl -X GET "http://localhost:3000/api/users?filter={\"firstName\":\"Admin\"}&page=1" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+
+# Operatörler ile filtreleme
+curl -X GET "http://localhost:3000/api/users?filter={\"firstName\":{\"like\":\"admin\"}}&page=1" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+
+# Çoklu değer JSON formatında
+curl -X GET "http://localhost:3000/api/users?filter={\"firstName\":[\"Admin\",\"Test\"]}&page=1" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+```
+
+#### Gelişmiş Sıralama
+```bash
+# Tek alan azalan: sort=-name
+curl -X GET "http://localhost:3000/api/users?sort=-firstName&page=1" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+
+# Çoklu alan sıralama: sort=name,-email
+curl -X GET "http://localhost:3000/api/users?sort=firstName,-email&page=1" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+
+# Karmaşık sıralama: sort=firstName,-email,createdAt
+curl -X GET "http://localhost:3000/api/users?sort=firstName,-email,createdAt&page=1" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+
+# Sort Alias'ları: sort=name-length
+curl -X GET "http://localhost:3000/api/users?sort=name-length&page=1" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+
+# Tam isim sıralama: sort=full-name
+curl -X GET "http://localhost:3000/api/users?sort=full-name&page=1" \
+  -H "Authorization: Bearer <admin-jwt-token>"
+```
+
+### Query Builder Özellikleri
+
+#### Filtreleme (Filtering)
+- **Eşitlik:** `?filter={"role":"admin"}`
+- **Arama:** `?filter={"firstName":{"like":"ahmet"}}`
+- **Boolean:** `?filter={"isActive":true}`
+- **Çoklu değer:** `?filter={"role":["admin","moderator"]}`
+
+#### Gelişmiş Filtreleme (Advanced Filtering)
+- **Basit eşitlik:** `?filter[firstName]=Admin`
+- **Çoklu değer:** `?filter[firstName]=Admin,Test`
+- **JSON formatı:** `?filter={"firstName":"Admin"}`
+- **Operatörler:** `?filter={"firstName":{"like":"admin"}}`
+- **Çoklu değer JSON:** `?filter={"firstName":["Admin","Test"]}`
+
+#### Sıralama (Sorting)
+- **Tek alan:** `?sort=firstName`
+- **Varsayılan:** `createdAt` alanına göre `desc` sıralama
+
+#### Gelişmiş Sıralama (Advanced Sorting)
+- **Tek alan azalan:** `?sort=-firstName`
+- **Çoklu alan:** `?sort=firstName,-email,createdAt`
+- **Laravel benzeri:** `?sort=name,-email,password`
+- **Sort Alias'ları:** `?sort=name-length`, `?sort=full-name`, `?sort=email-length`
+
+#### Sayfalama (Pagination)
+- **Sayfa:** `?page=1` (varsayılan: 1)
+- **Limit:** `?limit=10` (varsayılan: 10, max: 100)
+
+#### Alan Seçimi (Selecting Fields)
+- **Dahil etme:** `?select=firstName,lastName,email`
+- **Hariç tutma:** `?select=-password,-__v`
+
+#### İlişkiler (Including Relationships)
+- **Tek ilişki:** `?with=role`
+- **Çoklu ilişki:** `?with=role,permissions`
+
+### Response Format
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "60f7b3b3b3b3b3b3b3b3b3b3",
+      "firstName": "Ahmet",
+      "lastName": "Yılmaz",
+      "email": "ahmet@example.com",
+      "role": {
+        "_id": "60f7b3b3b3b3b3b3b3b3b3b4",
+        "name": "admin",
+        "description": "Tam yönetici rolü"
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 25,
+    "totalPages": 3,
+    "hasNextPage": true,
+    "hasPrevPage": false
+  }
+}
 ```
 
 ## 🧪 Test

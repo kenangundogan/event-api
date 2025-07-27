@@ -84,31 +84,8 @@ const seedRoles = async () => {
 
         // Rolleri kaydet
         const createdRoles = await Role.insertMany(roles);
-        console.log('Roller başarıyla oluşturuldu:', createdRoles.map(r => r.name));
-
-        // Mevcut kullanıcıların rollerini güncelle
-        const defaultRole = await Role.findOne({ name: 'user' });
-        const adminRole = await Role.findOne({ name: 'admin' });
-
-        if (defaultRole) {
-            // Tüm kullanıcıları varsayılan role ata
-            await User.updateMany(
-                { role: { $exists: false } },
-                { role: defaultRole._id }
-            );
-            console.log('Mevcut kullanıcılar varsayılan role atandı');
-        }
-
-        // Admin kullanıcılarını admin role ata
-        if (adminRole) {
-            await User.updateMany(
-                { email: { $in: ['admin@example.com'] } },
-                { role: adminRole._id }
-            );
-            console.log('Admin kullanıcıları admin role atandı');
-        }
-
-        console.log('Roller seed işlemi tamamlandı!');
+        console.log(`Roller başarıyla oluşturuldu! (${createdRoles.length})`, createdRoles.map(r => r.name));
+        console.log(`----------------------------------------------------------------`);
     } catch (error) {
         console.error('Seed hatası:', error);
         throw error;
