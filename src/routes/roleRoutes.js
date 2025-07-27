@@ -4,6 +4,7 @@ const roleController = require('../controllers/roleController');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
 // Public routes (sadece varsayılan rol)
+// Kullıcı oluşturulurken varsayılan rol gönderilir.
 router.get('/default', roleController.getDefaultRole);
 
 // Admin routes

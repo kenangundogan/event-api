@@ -180,55 +180,6 @@ class PermissionController {
             });
         }
     }
-
-    // Kaynağa göre izinleri getir
-    async getPermissionsByResource(req, res) {
-        try {
-            const { resource } = req.params;
-
-            const permissions = await Permission.getByResource(resource);
-
-            res.status(200).json({
-                success: true,
-                data: permissions
-            });
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: 'Kaynak izinleri getirilirken hata oluştu',
-                error: error.message
-            });
-        }
-    }
-
-    // İzin kontrolü
-    async checkPermission(req, res) {
-        try {
-            const { resource, action } = req.params;
-
-            const permission = await Permission.findOne({
-                resource,
-                action,
-                isActive: true
-            });
-
-            res.status(200).json({
-                success: true,
-                data: {
-                    resource,
-                    action,
-                    exists: !!permission,
-                    permission: permission || null
-                }
-            });
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: 'İzin kontrolü yapılırken hata oluştu',
-                error: error.message
-            });
-        }
-    }
 }
 
 module.exports = new PermissionController(); 
