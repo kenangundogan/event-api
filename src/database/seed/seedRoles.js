@@ -1,25 +1,14 @@
-const mongoose = require('mongoose');
 const Role = require('../../models/Role');
 const User = require('../../models/User');
 const Permission = require('../../models/Permission');
-require('dotenv').config();
-
-const connectDB = async () => {
-    try {
-        const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/event_api');
-        console.log(`MongoDB bağlantısı başarılı: ${conn.connection.host}`);
-    } catch (error) {
-        console.error('MongoDB bağlantı hatası:', error.message);
-        process.exit(1);
-    }
-};
 
 const seedRoles = async () => {
     try {
-        await connectDB();
+        console.log('Roller oluşturuluyor...');
 
         // Mevcut rolleri temizle
         await Role.deleteMany({});
+        console.log('Mevcut roller temizlendi');
 
         // Önce izinleri al
         const permissions = await Permission.find({ isActive: true });
@@ -122,13 +111,11 @@ const seedRoles = async () => {
             console.log('Admin kullanıcıları admin role atandı');
         }
 
-        console.log('Seed işlemi tamamlandı!');
+        console.log('Roller seed işlemi tamamlandı!');
     } catch (error) {
         console.error('Seed hatası:', error);
         throw error;
     }
 };
-
-// Artık ayrı çalıştırılmayacak, sadece export
 
 module.exports = seedRoles; 

@@ -1,21 +1,8 @@
-const mongoose = require('mongoose');
 const Permission = require('../../models/Permission');
-require('dotenv').config();
-
-const connectDB = async () => {
-  try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/event_api';
-    await mongoose.connect(mongoURI);
-    console.log('MongoDB bağlantısı başarılı');
-  } catch (error) {
-    console.error('MongoDB bağlantı hatası:', error.message);
-    process.exit(1);
-  }
-};
 
 const seedPermissions = async () => {
   try {
-    await connectDB();
+    console.log('İzinler oluşturuluyor...');
     
     // Mevcut izinleri temizle
     await Permission.deleteMany({});
@@ -225,9 +212,9 @@ const seedPermissions = async () => {
       });
     }
     
-    console.log('\n✅ İzinler başarıyla oluşturuldu!');
+    console.log('İzinler başarıyla oluşturuldu!');
   } catch (error) {
-    console.error('❌ Hata:', error.message);
+    console.error('Hata:', error.message);
     throw error;
   }
 };

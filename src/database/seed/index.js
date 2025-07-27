@@ -1,23 +1,14 @@
-const mongoose = require('mongoose');
+const connectDB = require('../../config/database');
 const seedPermissions = require('./seedPermissions');
 const seedRoles = require('./seedRoles');
 const seedUsers = require('./seedUsers');
-require('dotenv').config();
-
-const connectDB = async () => {
-    try {
-        const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/event_api';
-        await mongoose.connect(mongoURI);
-        console.log('MongoDB bağlantısı başarılı');
-    } catch (error) {
-        console.error('MongoDB bağlantı hatası:', error.message);
-        process.exit(1);
-    }
-};
 
 const runAllSeeds = async () => {
     try {
-        console.log('🌱 Seed işlemi başlatılıyor...\n');
+        console.log('Seed işlemi başlatılıyor...\n');
+
+        // Veritabanı bağlantısını kur
+        await connectDB();
 
         // 1. İzinleri oluştur
         await seedPermissions();
@@ -27,16 +18,15 @@ const runAllSeeds = async () => {
 
         // 3. Kullanıcıları oluştur
         await seedUsers();
-        console.log('✅ Kullanıcılar başarıyla oluşturuldu\n');
 
+        console.log('Tüm seed işlemleri başarıyla tamamlandı!');
         process.exit(0);
     } catch (error) {
-        console.error('❌ Seed hatası:', error.message);
+        console.error('Seed hatası:', error.message);
         process.exit(1);
     }
 };
 
-// Eğer bu dosya doğrudan çalıştırılıyorsa
 if (require.main === module) {
     runAllSeeds();
 }

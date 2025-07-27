@@ -3,7 +3,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
-require('dotenv').config();
 
 const connectDB = require('./config/database');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
@@ -23,7 +22,7 @@ app.use(helmet());
 
 // CORS
 app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+    origin: process.env.ALLOWED_ORIGINS?.split(','),
     credentials: true
 }));
 
