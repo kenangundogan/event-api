@@ -24,20 +24,23 @@ src/
 │   └── database.js          # MongoDB bağlantı konfigürasyonu
 ├── controllers/
 │   ├── userController.js    # User işlemleri controller'ı
-│   └── roleController.js    # Role işlemleri controller'ı
+│   ├── roleController.js    # Role işlemleri controller'ı
+│   └── permissionController.js # Permission işlemleri controller'ı
 ├── middleware/
 │   ├── auth.js             # JWT authentication middleware
 │   └── errorHandler.js     # Error handling middleware
 ├── models/
 │   ├── User.js             # User modeli
-│   └── Role.js             # Role modeli
+│   ├── Role.js             # Role modeli
+│   └── Permission.js       # Permission modeli
 ├── routes/
 │   ├── userRoutes.js       # User route'ları
-│   └── roleRoutes.js       # Role route'ları
+│   ├── roleRoutes.js       # Role route'ları
+│   └── permissionRoutes.js # Permission route'ları
 ├── validations/
 │   ├── userValidation.js   # User validation şemaları
 │   ├── roleValidation.js   # Role validation şemaları
-│   └── permissionValidation.js   # Permission validation şemaları
+│   └── permissionValidation.js # Permission validation şemaları
 ├── database/
 │   └── seed/
 │       ├── index.js           # Ana seed dosyası
@@ -99,6 +102,7 @@ src/
 |--------|----------|-------------|
 | POST | `/api/users/register` | Yeni kullanıcı kaydı |
 | POST | `/api/users/login` | Kullanıcı girişi |
+| GET | `/api/roles/default` | Varsayılan rolü getir |
 
 ### Protected Routes
 
@@ -127,8 +131,8 @@ src/
 | POST | `/api/roles` | Yeni rol oluştur | ✅ | Admin |
 | PUT | `/api/roles/:id` | Rol güncelle | ✅ | Admin |
 | DELETE | `/api/roles/:id` | Rol sil | ✅ | Admin |
-| GET | `/api/roles/default` | Varsayılan rolü getir | ❌ | - |
-| GET | `/api/roles/:roleId/permission/:permission` | İzin kontrolü | ✅ | Admin |
+| GET | `/api/roles/:roleId/permissions` | Rolün tüm izinlerini getir | ✅ | Admin |
+| GET | `/api/roles/:roleId/permissions/:permission` | Rolün belirli iznini getir | ✅ | Admin |
 
 ### Permission Management Routes
 
@@ -139,9 +143,6 @@ src/
 | POST | `/api/permissions` | Yeni izin oluştur | ✅ | Admin |
 | PUT | `/api/permissions/:id` | İzin güncelle | ✅ | Admin |
 | DELETE | `/api/permissions/:id` | İzin sil | ✅ | Admin |
-| GET | `/api/permissions/system` | Sistem izinlerini getir | ❌ | - |
-| GET | `/api/permissions/category/:category` | Kategori izinlerini getir | ❌ | - |
-| GET | `/api/permissions/check/:resource/:action` | İzin kontrolü | ❌ | - |
 
 ## 🔐 Authentication
 
@@ -243,9 +244,15 @@ curl -X POST http://localhost:3000/api/roles \
   }'
 ```
 
-#### İzin Kontrolü
+#### Rolün Tüm İzinlerini Getirme
 ```bash
-curl -X GET http://localhost:3000/api/roles/{roleId}/permission/user:create \
+curl -X GET http://localhost:3000/api/roles/{roleId}/permissions \
+  -H "Authorization: Bearer <admin-jwt-token>"
+```
+
+#### Rolün Belirli İznini Getirme
+```bash
+curl -X GET http://localhost:3000/api/roles/{roleId}/permissions/user:read \
   -H "Authorization: Bearer <admin-jwt-token>"
 ```
 
@@ -257,31 +264,17 @@ curl -X GET http://localhost:3000/api/permissions \
   -H "Authorization: Bearer <admin-jwt-token>"
 ```
 
-#### Kategoriye Göre İzinleri Listeleme
-```bash
-curl -X GET http://localhost:3000/api/permissions/category/user \
-  -H "Authorization: Bearer <admin-jwt-token>"
-```
-
 #### Yeni İzin Oluşturma
 ```bash
 curl -X POST http://localhost:3000/api/permissions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <admin-jwt-token>" \
   -d '{
-    "name": "event_approve",
     "description": "Etkinlikleri onaylama izni",
-    "category": "event",
     "resource": "event",
     "action": "approve",
     "priority": 35
   }'
-```
-
-#### İzin Kontrolü
-```bash
-curl -X GET http://localhost:3000/api/permissions/check/event/approve \
-  -H "Authorization: Bearer <admin-jwt-token>"
 ```
 
 ## 🧪 Test
@@ -325,6 +318,21 @@ curl http://localhost:3000/api/health
 
 ## 🎭 Role & Permission System
 
+### Permission Model Yapısı
+
+**Permission Modeli:**
+```javascript
+{
+  "description": "Kullanıcı bilgilerini görüntüleme izni",
+  "resource": "user",           // Kaynak (user, event, category, system)
+  "action": "read",             // Eylem (read, create, update, delete, list)
+  "isActive": true,             // Aktif durumu
+  "priority": 10,               // Öncelik
+  "name": "user:read",          // Virtual field (resource:action)
+  "fullName": "user:read"       // Virtual field (resource:action)
+}
+```
+
 ### Varsayılan Roller
 
 | Rol | Açıklama | İzinler |
@@ -343,11 +351,33 @@ curl http://localhost:3000/api/health
 
 ### İzin Sistemi
 
-**Mevcut İzinler:**
-- **User Permissions**: `user:read`, `user:create`, `user:update`, `user:delete`, `user:list`
-- **Event Permissions**: `event:read`, `event:create`, `event:update`, `event:delete`, `event:list`, `event:approve`, `event:reject`
-- **Category Permissions**: `category:read`, `category:create`, `category:update`, `category:delete`, `category:list`
-- **System Permissions**: `system:admin`, `system:settings`, `system:logs`
+**Mevcut İzinler (18 adet):**
+
+**User Permissions (5):**
+- `user:read` - Kullanıcı bilgilerini görüntüleme
+- `user:create` - Yeni kullanıcı oluşturma
+- `user:update` - Kullanıcı bilgilerini güncelleme
+- `user:delete` - Kullanıcı silme
+- `user:list` - Kullanıcı listesini görüntüleme
+
+**Event Permissions (5):**
+- `event:read` - Etkinlik bilgilerini görüntüleme
+- `event:create` - Yeni etkinlik oluşturma
+- `event:update` - Etkinlik bilgilerini güncelleme
+- `event:delete` - Etkinlik silme
+- `event:list` - Etkinlik listesini görüntüleme
+
+**Category Permissions (5):**
+- `category:read` - Kategori bilgilerini görüntüleme
+- `category:create` - Yeni kategori oluşturma
+- `category:update` - Kategori bilgilerini güncelleme
+- `category:delete` - Kategori silme
+- `category:list` - Kategori listesini görüntüleme
+
+**System Permissions (3):**
+- `system:admin` - Tam sistem yönetici izni
+- `system:settings` - Sistem ayarlarını değiştirme izni
+- `system:logs` - Sistem loglarını görüntüleme izni
 
 ### Yetkilendirme Middleware'leri
 
