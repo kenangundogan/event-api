@@ -189,12 +189,12 @@ class RoleController {
         }
     }
 
-    // İzin kontrolü
-    async checkPermission(req, res) {
+    // Rolün tüm izinlerini getir
+    async getRolePermissions(req, res) {
         try {
-            const { roleId, permission } = req.params;
+            const { roleId } = req.params;
 
-            const role = await Role.findById(roleId);
+            const role = await Role.findById(roleId).populate('permissions');
 
             if (!role) {
                 return res.status(404).json({
@@ -203,20 +203,58 @@ class RoleController {
                 });
             }
 
-            const hasPermission = role.hasPermission(permission);
-
             res.status(200).json({
                 success: true,
                 data: {
                     roleId,
-                    permission,
-                    hasPermission
+                    roleName: role.name,
+                    permissions: role.permissions || []
                 }
             });
         } catch (error) {
             res.status(500).json({
                 success: false,
-                message: 'İzin kontrolü yapılırken hata oluştu',
+                message: 'Rol izinleri getirilirken hata oluştu',
+                error: error.message
+            });
+        }
+    }
+
+    // Rolün belirli bir iznini getir
+    async getRolePermission(req, res) {
+        try {
+            const { roleId, permission } = req.params;
+
+            const role = await Role.findById(roleId).populate('permissions');
+
+            if (!role) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Rol bulunamadı'
+                });
+            }
+
+            const targetPermission = role.permissions.find(p => p._id.toString() === permission);
+
+            if (!targetPermission) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Bu rol belirtilen izne sahip değil'
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                data: {
+                    roleId,
+                    roleName: role.name,
+                    permission: targetPermission
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Rol izni getirilirken hata oluştu',
                 error: error.message
             });
         }
