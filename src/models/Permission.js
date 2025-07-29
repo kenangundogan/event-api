@@ -37,11 +37,6 @@ const permissionSchema = new mongoose.Schema({
 permissionSchema.index({ resource: 1, action: 1 });
 permissionSchema.index({ isActive: 1 });
 
-// Virtual field for permission name (using fullName format)
-permissionSchema.virtual('name').get(function () {
-    return `${this.resource}:${this.action}`;
-});
-
 // Static method - kaynağa göre izinleri getir
 permissionSchema.statics.getByResource = function (resource) {
     return this.find({ resource, isActive: true }).sort({ priority: -1, resource: 1, action: 1 });

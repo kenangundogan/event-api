@@ -14,8 +14,4 @@ router.post('/', authenticateToken, authorizeRoles(['admin']), roleController.cr
 router.put('/:id', authenticateToken, authorizeRoles(['admin']), roleController.update);
 router.delete('/:id', authenticateToken, authorizeRoles(['admin']), roleController.delete);
 
-// Role permissions routes
-router.get('/:roleId/permissions', authenticateToken, authorizeRoles(['admin']), roleController.getRolePermissions);
-router.get('/:roleId/permissions/:permission', authenticateToken, authorizeRoles(['admin']), roleController.getRolePermission);
-
 module.exports = router; 

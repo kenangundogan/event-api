@@ -196,11 +196,6 @@ class QueryBuilder {
                 this.sort[alias.field] = direction;
                 break;
                 
-            case 'fullName':
-                // Tam isim sıralama (firstName + lastName) - aggregation gerekli
-                this.sort = { _aggregation: 'fullName', field: alias.field, direction };
-                break;
-                
             case 'relationField':
                 // İlişki alanına göre sıralama
                 this.populate.push({ 
@@ -404,13 +399,6 @@ class QueryBuilder {
                 }
             });
             this.sort = { nameLength: this.sort.direction };
-        } else if (this.sort._aggregation === 'fullName') {
-            pipeline.push({
-                $addFields: {
-                    fullName: { $concat: [`$${this.sort.field}`, ' ', '$lastName'] }
-                }
-            });
-            this.sort = { fullName: this.sort.direction };
         }
 
         // Sort

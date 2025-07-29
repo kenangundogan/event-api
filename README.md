@@ -502,8 +502,6 @@ curl http://localhost:3000/api/health
   "action": "read",             // Eylem (read, create, update, delete, list)
   "isActive": true,             // Aktif durumu
   "priority": 10,               // Öncelik
-  "name": "user:read",          // Virtual field (resource:action)
-  "fullName": "user:read"       // Virtual field (resource:action)
 }
 ```
 

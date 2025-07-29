@@ -71,11 +71,6 @@ const userSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Virtual field for full name
-userSchema.virtual('fullName').get(function () {
-    return `${this.firstName} ${this.lastName}`;
-});
-
 // Index'ler
 userSchema.index({ createdAt: -1 });
 
