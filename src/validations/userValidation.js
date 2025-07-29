@@ -116,93 +116,9 @@ const updateUserSchema = Joi.object({
     }).optional()
 });
 
-// Kullanıcı kendi profilini güncelleme validation şeması
-const updateProfileSchema = Joi.object({
-    firstName: Joi.string()
-        .min(2)
-        .max(50)
-        .optional()
-        .messages({
-            'string.min': 'Ad en az 2 karakter olmalıdır',
-            'string.max': 'Ad 50 karakterden uzun olamaz'
-        }),
 
-    lastName: Joi.string()
-        .min(2)
-        .max(50)
-        .optional()
-        .messages({
-            'string.min': 'Soyad en az 2 karakter olmalıdır',
-            'string.max': 'Soyad 50 karakterden uzun olamaz'
-        }),
 
-    email: Joi.string()
-        .email()
-        .optional()
-        .messages({
-            'string.email': 'Geçerli bir email adresi giriniz'
-        }),
 
-    phone: Joi.string()
-        .pattern(/^[0-9+\-\s()]+$/)
-        .optional()
-        .messages({
-            'string.pattern.base': 'Geçerli bir telefon numarası giriniz'
-        }),
-
-    preferences: Joi.object({
-        notifications: Joi.object({
-            email: Joi.boolean(),
-            push: Joi.boolean(),
-            sms: Joi.boolean()
-        }).optional(),
-        language: Joi.string().valid('tr', 'en')
-    }).optional()
-});
-
-// Şifre değiştirme validation şeması
-const changePasswordSchema = Joi.object({
-    currentPassword: Joi.string()
-        .required()
-        .messages({
-            'any.required': 'Mevcut şifre zorunludur'
-        }),
-
-    newPassword: Joi.string()
-        .min(6)
-        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-        .required()
-        .messages({
-            'string.min': 'Yeni şifre en az 6 karakter olmalıdır',
-            'string.pattern.base': 'Yeni şifre en az bir büyük harf, bir küçük harf ve bir rakam içermelidir',
-            'any.required': 'Yeni şifre zorunludur'
-        }),
-
-    confirmPassword: Joi.string()
-        .valid(Joi.ref('newPassword'))
-        .required()
-        .messages({
-            'any.only': 'Şifreler eşleşmiyor',
-            'any.required': 'Şifre onayı zorunludur'
-        })
-});
-
-// Login validation şeması
-const loginSchema = Joi.object({
-    email: Joi.string()
-        .email()
-        .required()
-        .messages({
-            'string.email': 'Geçerli bir email adresi giriniz',
-            'any.required': 'Email alanı zorunludur'
-        }),
-
-    password: Joi.string()
-        .required()
-        .messages({
-            'any.required': 'Şifre alanı zorunludur'
-        })
-});
 
 // Query parametreleri validation şeması
 const userQuerySchema = Joi.object({
@@ -217,8 +133,5 @@ const userQuerySchema = Joi.object({
 module.exports = {
     createUserSchema,
     updateUserSchema,
-    updateProfileSchema,
-    changePasswordSchema,
-    loginSchema,
     userQuerySchema
 }; 

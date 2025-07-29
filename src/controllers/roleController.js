@@ -2,8 +2,7 @@ const Role = require('../models/Role');
 const { createRoleSchema, updateRoleSchema } = require('../validations/roleValidation');
 
 class RoleController {
-    // Tüm rolleri getir
-    async getAllRoles(req, res) {
+    async getAll(req, res) {
         try {
             const roles = await Role.find({ isActive: true })
                 .sort({ priority: -1, name: 1 });
@@ -21,8 +20,7 @@ class RoleController {
         }
     }
 
-    // Tek rol getir
-    async getRoleById(req, res) {
+    async getById(req, res) {
         try {
             const { id } = req.params;
 
@@ -48,8 +46,7 @@ class RoleController {
         }
     }
 
-    // Yeni rol oluştur
-    async createRole(req, res) {
+    async create(req, res) {
         try {
             const { error, value } = createRoleSchema.validate(req.body);
             if (error) {
@@ -84,8 +81,7 @@ class RoleController {
         }
     }
 
-    // Rol güncelle
-    async updateRole(req, res) {
+    async update(req, res) {
         try {
             const { id } = req.params;
             const { error, value } = updateRoleSchema.validate(req.body);
@@ -132,8 +128,7 @@ class RoleController {
         }
     }
 
-    // Rol sil (soft delete)
-    async deleteRole(req, res) {
+    async delete(req, res) {
         try {
             const { id } = req.params;
 

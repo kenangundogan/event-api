@@ -2,8 +2,7 @@ const Permission = require('../models/Permission');
 const { createPermissionSchema, updatePermissionSchema } = require('../validations/permissionValidation');
 
 class PermissionController {
-    // Tüm izinleri getir
-    async getAllPermissions(req, res) {
+    async getAll(req, res) {
         try {
             const { resource } = req.query;
 
@@ -28,8 +27,7 @@ class PermissionController {
         }
     }
 
-    // Tek izin getir
-    async getPermissionById(req, res) {
+    async getById(req, res) {
         try {
             const { id } = req.params;
 
@@ -55,8 +53,7 @@ class PermissionController {
         }
     }
 
-    // Yeni izin oluştur
-    async createPermission(req, res) {
+    async create(req, res) {
         try {
             const { error, value } = createPermissionSchema.validate(req.body);
             if (error) {
@@ -97,8 +94,7 @@ class PermissionController {
         }
     }
 
-    // İzin güncelle
-    async updatePermission(req, res) {
+    async update(req, res) {
         try {
             const { id } = req.params;
             const { error, value } = updatePermissionSchema.validate(req.body);
@@ -153,9 +149,8 @@ class PermissionController {
             });
         }
     }
-
-    // İzin sil
-    async deletePermission(req, res) {
+    
+    async delete(req, res) {
         try {
             const { id } = req.params;
 

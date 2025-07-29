@@ -3,20 +3,11 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
-// Public routes
-router.post('/register', userController.createUser);
-router.post('/login', userController.login);
-
-// Protected routes
-router.get('/profile', authenticateToken, userController.getProfile);
-router.put('/profile', authenticateToken, userController.updateProfile);
-router.put('/change-password', authenticateToken, userController.changeOwnPassword);
-router.put('/change-password/:id', authenticateToken, authorizeRoles(['admin']), userController.changePassword);
-
 // Admin routes
-router.get('/', authenticateToken, authorizeRoles(['admin']), userController.getAllUsers);
-router.get('/:id', authenticateToken, authorizeRoles(['admin']), userController.getUserById);
-router.put('/:id', authenticateToken, authorizeRoles(['admin']), userController.updateUser);
-router.delete('/:id', authenticateToken, authorizeRoles(['admin']), userController.deleteUser);
+router.get('/', authenticateToken, authorizeRoles(['admin']), userController.getAll);
+router.get('/:id', authenticateToken, authorizeRoles(['admin']), userController.getById);
+router.post('/', authenticateToken, authorizeRoles(['admin']), userController.create);
+router.put('/:id', authenticateToken, authorizeRoles(['admin']), userController.update);
+router.delete('/:id', authenticateToken, authorizeRoles(['admin']), userController.delete);
 
 module.exports = router; 

@@ -2,18 +2,12 @@ const User = require('../models/User');
 const {
     createUserSchema,
     updateUserSchema,
-    updateProfileSchema,
-    changePasswordSchema,
-    loginSchema,
     userQuerySchema
 } = require('../validations/userValidation');
 const { queryBuilder } = require('../utils/queryBuilder');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 
 class UserController {
-    // Tüm kullanıcıları getir (profesyonel query builder ile)
-    async getAllUsers(req, res) {
+    async getAll(req, res) {
         try {
             const { error, value } = userQuerySchema.validate(req.query);
             if (error) {
@@ -92,8 +86,7 @@ class UserController {
         }
     }
 
-    // Tek kullanıcı getir
-    async getUserById(req, res) {
+    async getById(req, res) {
         try {
             const { id } = req.params;
             const { select, with: relations } = req.query;
@@ -135,8 +128,7 @@ class UserController {
         }
     }
 
-    // Yeni kullanıcı oluştur
-    async createUser(req, res) {
+    async create(req, res) {
         try {
             const { error, value } = createUserSchema.validate(req.body);
             if (error) {
@@ -193,8 +185,7 @@ class UserController {
         }
     }
 
-    // Kullanıcı güncelle
-    async updateUser(req, res) {
+    async update(req, res) {
         try {
             const { id } = req.params;
             const { error, value } = updateUserSchema.validate(req.body);
@@ -255,8 +246,7 @@ class UserController {
         }
     }
 
-    // Kullanıcı sil (soft delete)
-    async deleteUser(req, res) {
+    async delete(req, res) {
         try {
             const { id } = req.params;
 
@@ -282,280 +272,6 @@ class UserController {
             res.status(500).json({
                 success: false,
                 message: 'Kullanıcı silinirken hata oluştu',
-                error: error.message
-            });
-        }
-    }
-
-    // Kullanıcı girişi
-    async login(req, res) {
-        try {
-            const { error, value } = loginSchema.validate(req.body);
-            if (error) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Geçersiz veri',
-                    errors: error.details.map(detail => detail.message)
-                });
-            }
-
-            const { email, password } = value;
-
-            // Kullanıcıyı bul (password dahil)
-            const user = await User.findOne({ email }).select('+password').populate('role');
-            if (!user) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Geçersiz email veya şifre'
-                });
-            }
-
-            // Şifre kontrolü
-            const isPasswordValid = await bcrypt.compare(password, user.password);
-            if (!isPasswordValid) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Geçersiz email veya şifre'
-                });
-            }
-
-            // Kullanıcı aktif mi kontrol et
-            if (!user.isActive) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Hesabınız aktif değil'
-                });
-            }
-
-            // JWT token oluştur
-            const token = jwt.sign(
-                { 
-                    userId: user._id,
-                    email: user.email,
-                    role: user.role?.name || 'user'
-                },
-                process.env.JWT_SECRET,
-                { expiresIn: '24h' }
-            );
-
-            res.status(200).json({
-                success: true,
-                message: 'Giriş başarılı',
-                data: {
-                    user: {
-                        id: user._id,
-                        firstName: user.firstName,
-                        lastName: user.lastName,
-                        email: user.email,
-                        role: user.role?.name || 'user',
-                        isActive: user.isActive,
-                        isEmailVerified: user.isEmailVerified
-                    },
-                    token
-                }
-            });
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: 'Giriş yapılırken hata oluştu',
-                error: error.message
-            });
-        }
-    }
-
-    // Şifre değiştirme (admin)
-    async changePassword(req, res) {
-        try {
-            const { id } = req.params;
-            const { error, value } = changePasswordSchema.validate(req.body);
-
-            if (error) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Geçersiz veri',
-                    errors: error.details.map(detail => detail.message)
-                });
-            }
-
-            const { newPassword, confirmPassword } = value;
-
-            // Şifre eşleşme kontrolü
-            if (newPassword !== confirmPassword) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Şifreler eşleşmiyor'
-                });
-            }
-
-            // Kullanıcıyı bul
-            const user = await User.findById(id);
-            if (!user) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Kullanıcı bulunamadı'
-                });
-            }
-
-            // Yeni şifreyi hash'le
-            const hashedPassword = await bcrypt.hash(newPassword, 12);
-
-            // Şifreyi güncelle
-            user.password = hashedPassword;
-            await user.save();
-
-            res.status(200).json({
-                success: true,
-                message: 'Şifre başarıyla değiştirildi'
-            });
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: 'Şifre değiştirilirken hata oluştu',
-                error: error.message
-            });
-        }
-    }
-
-    // Kullanıcı profili getir
-    async getProfile(req, res) {
-        try {
-            const userId = req.user.userId;
-
-            const user = await User.findById(userId)
-                .select('-password')
-                .populate('role');
-
-            if (!user) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Kullanıcı bulunamadı'
-                });
-            }
-
-            res.status(200).json({
-                success: true,
-                data: user
-            });
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: 'Profil getirilirken hata oluştu',
-                error: error.message
-            });
-        }
-    }
-
-    // Kendi profilini güncelle
-    async updateProfile(req, res) {
-        try {
-            const userId = req.user.userId;
-            const { error, value } = updateProfileSchema.validate(req.body);
-
-            if (error) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Geçersiz veri',
-                    errors: error.details.map(detail => detail.message)
-                });
-            }
-
-            // Email değişikliği varsa kontrol et
-            if (value.email) {
-                const existingUser = await User.findOne({
-                    email: value.email,
-                    _id: { $ne: userId }
-                });
-                if (existingUser) {
-                    return res.status(409).json({
-                        success: false,
-                        message: 'Bu email adresi zaten kullanılıyor'
-                    });
-                }
-            }
-
-            const user = await User.findByIdAndUpdate(
-                userId,
-                value,
-                { new: true, runValidators: true }
-            ).select('-password');
-
-            res.status(200).json({
-                success: true,
-                message: 'Profil başarıyla güncellendi',
-                data: user
-            });
-        } catch (error) {
-            if (error.code === 11000) {
-                return res.status(409).json({
-                    success: false,
-                    message: 'Bu email adresi zaten kullanılıyor'
-                });
-            }
-
-            res.status(500).json({
-                success: false,
-                message: 'Profil güncellenirken hata oluştu',
-                error: error.message
-            });
-        }
-    }
-
-    // Kendi şifresini değiştir
-    async changeOwnPassword(req, res) {
-        try {
-            const userId = req.user.userId;
-            const { error, value } = changePasswordSchema.validate(req.body);
-
-            if (error) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Geçersiz veri',
-                    errors: error.details.map(detail => detail.message)
-                });
-            }
-
-            const { currentPassword, newPassword, confirmPassword } = value;
-
-            // Şifre eşleşme kontrolü
-            if (newPassword !== confirmPassword) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Yeni şifreler eşleşmiyor'
-                });
-            }
-
-            // Kullanıcıyı bul (password dahil)
-            const user = await User.findById(userId).select('+password');
-            if (!user) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Kullanıcı bulunamadı'
-                });
-            }
-
-            // Mevcut şifre kontrolü
-            const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
-            if (!isCurrentPasswordValid) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Mevcut şifre yanlış'
-                });
-            }
-
-            // Yeni şifreyi hash'le
-            const hashedPassword = await bcrypt.hash(newPassword, 12);
-
-            // Şifreyi güncelle
-            await User.findByIdAndUpdate(userId, { password: hashedPassword });
-
-            res.status(200).json({
-                success: true,
-                message: 'Şifreniz başarıyla değiştirildi'
-            });
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: 'Şifre değiştirilirken hata oluştu',
                 error: error.message
             });
         }
