@@ -3,10 +3,14 @@ const seedGenders = require('./gender');
 const seedPermissions = require('./permission');
 const seedRoles = require('./role');
 const seedUsers = require('./user');
+const seedContinents = require('./continent');
+const seedCountries = require('./country');
+const seedCities = require('./city');
 
 const runAllSeeds = async () => {
     try {
         console.log('Seed işlemi başlatılıyor...');
+        console.log('--------------------------------');
 
         await connectDB();
 
@@ -17,6 +21,12 @@ const runAllSeeds = async () => {
         await seedRoles();
 
         await seedUsers();
+
+        await seedContinents();
+
+        await seedCountries();
+
+        await seedCities();
 
         console.log('Tüm seed işlemleri başarıyla tamamlandı!');
         process.exit(0);

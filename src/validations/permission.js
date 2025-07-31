@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-// Permission oluşturma validation şeması
+// Create validation schema
 const createPermissionSchema = Joi.object({
     description: Joi.string()
         .max(500)
@@ -44,7 +44,7 @@ const createPermissionSchema = Joi.object({
         })
 });
 
-// Permission güncelleme validation şeması
+// Update validation schema
 const updatePermissionSchema = Joi.object({
     description: Joi.string()
         .max(500)

@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-// Kullanıcı kaydı validation şeması
+// Register validation schema
 const registerSchema = Joi.object({
     firstName: Joi.string()
         .min(2)
@@ -65,7 +65,7 @@ const registerSchema = Joi.object({
     }).optional()
 });
 
-// Login validation şeması
+// Login validation schema
 const loginSchema = Joi.object({
     email: Joi.string()
         .email()
@@ -82,7 +82,7 @@ const loginSchema = Joi.object({
         })
 });
 
-// Şifre değiştirme validation şeması (kendi şifresi)
+// Change own password validation schema
 const changeOwnPasswordSchema = Joi.object({
     currentPassword: Joi.string()
         .required()
@@ -109,7 +109,7 @@ const changeOwnPasswordSchema = Joi.object({
         })
 });
 
-// Admin şifre değiştirme validation şeması
+// Admin change password validation schema
 const changePasswordSchema = Joi.object({
     currentPassword: Joi.string()
         .required()
@@ -136,7 +136,7 @@ const changePasswordSchema = Joi.object({
         })
 });
 
-// Şifre sıfırlama isteği validation şeması
+// Forgot password validation schema
 const forgotPasswordSchema = Joi.object({
     email: Joi.string()
         .email()
@@ -147,7 +147,7 @@ const forgotPasswordSchema = Joi.object({
         })
 });
 
-// Şifre sıfırlama validation şeması
+// Reset password validation schema
 const resetPasswordSchema = Joi.object({
     token: Joi.string()
         .required()
@@ -174,7 +174,7 @@ const resetPasswordSchema = Joi.object({
         })
 });
 
-// Kullanıcı kendi profilini güncelleme validation şeması
+// Update profile validation schema
 const updateProfileSchema = Joi.object({
     firstName: Joi.string()
         .min(2)

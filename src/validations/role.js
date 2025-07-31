@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-// Role oluşturma validation şeması
+// Create validation schema
 const createRoleSchema = Joi.object({
     name: Joi.string()
         .min(2)
@@ -67,7 +67,7 @@ const createRoleSchema = Joi.object({
         })
 });
 
-// Role güncelleme validation şeması
+// Update validation schema
 const updateRoleSchema = Joi.object({
     name: Joi.string()
         .min(2)

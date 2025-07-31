@@ -13,6 +13,9 @@ const userRoutes = require('./routes/user');
 const roleRoutes = require('./routes/role');
 const permissionRoutes = require('./routes/permission');
 const genderRoutes = require('./routes/gender');
+const continentRoutes = require('./routes/continent');
+const countryRoutes = require('./routes/country');
+const cityRoutes = require('./routes/city');
 
 const app = express();
 
@@ -66,6 +69,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/permissions', permissionRoutes);
 app.use('/api/genders', genderRoutes);
+app.use('/api/continents', continentRoutes);
+app.use('/api/countries', countryRoutes);
+app.use('/api/cities', cityRoutes);
 
 // 404 handler
 app.use(notFound);

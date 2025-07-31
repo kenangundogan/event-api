@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-// User oluşturma validation şeması
+// Create validation schema
 const createUserSchema = Joi.object({
     firstName: Joi.string()
         .min(2)
@@ -63,7 +63,7 @@ const createUserSchema = Joi.object({
     }).optional()
 });
 
-// User güncelleme validation şeması (Admin için)
+// Update validation schema
 const updateUserSchema = Joi.object({
     firstName: Joi.string()
         .min(2)
@@ -116,11 +116,7 @@ const updateUserSchema = Joi.object({
     }).optional()
 });
 
-
-
-
-
-// Query parametreleri validation şeması
+// Query parameters validation schema
 const userQuerySchema = Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(100).default(10),

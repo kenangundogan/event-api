@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-// User oluşturma validation şeması
+// Create validation schema
 const createGenderSchema = Joi.object({
     name: Joi.string()
         .min(2)
@@ -34,7 +34,7 @@ const createGenderSchema = Joi.object({
         })
 });
 
-// User güncelleme validation şeması (Admin için)
+// Update validation schema
 const updateGenderSchema = Joi.object({
     name: Joi.string()
         .min(2)
@@ -65,7 +65,7 @@ const updateGenderSchema = Joi.object({
         })
 });
 
-// Query parametreleri validation şeması
+// Query parameters validation schema
 const genderQuerySchema = Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(100).default(10),
