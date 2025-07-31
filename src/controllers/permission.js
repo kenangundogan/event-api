@@ -1,5 +1,5 @@
 const Permission = require('../models/Permission');
-const { createPermissionSchema, updatePermissionSchema } = require('../validations/permissionValidation');
+const { createPermissionSchema, updatePermissionSchema } = require('../validations/permission');
 
 class PermissionController {
     async getAll(req, res) {

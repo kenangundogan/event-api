@@ -28,28 +28,10 @@ const permissionSchema = new mongoose.Schema({
         min: 0
     }
 }, {
-    timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    timestamps: true
 });
 
-// Index'ler
 permissionSchema.index({ resource: 1, action: 1 });
 permissionSchema.index({ isActive: 1 });
-
-// Static method - kaynağa göre izinleri getir
-permissionSchema.statics.getByResource = function (resource) {
-    return this.find({ resource, isActive: true }).sort({ priority: -1, resource: 1, action: 1 });
-};
-
-// Static method - aktif izinleri getir
-permissionSchema.statics.getActive = function () {
-    return this.find({ isActive: true }).sort({ resource: 1, priority: -1, action: 1 });
-};
-
-// Instance method - izin kontrolü
-permissionSchema.methods.matches = function (resource, action) {
-    return this.resource === resource && this.action === action;
-};
 
 module.exports = mongoose.model('Permission', permissionSchema); 

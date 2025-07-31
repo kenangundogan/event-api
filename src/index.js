@@ -8,10 +8,11 @@ const connectDB = require('./config/database');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // Routes
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const roleRoutes = require('./routes/roleRoutes');
-const permissionRoutes = require('./routes/permissionRoutes');
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
+const roleRoutes = require('./routes/role');
+const permissionRoutes = require('./routes/permission');
+const genderRoutes = require('./routes/gender');
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/permissions', permissionRoutes);
+app.use('/api/genders', genderRoutes);
 
 // 404 handler
 app.use(notFound);
@@ -85,8 +87,12 @@ process.on('SIGINT', () => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log(`Server ${PORT} portunda çalışıyor`);
+    console.log(`--------------------------------`);
     console.log(`Environment: ${process.env.NODE_ENV}`);
+    console.log(`Allowed Origins: ${process.env.ALLOWED_ORIGINS}`);
+    console.log(`Port: ${PORT}`);
+    console.log(`MongoDB URI: ${process.env.MONGODB_URI}`);
+    console.log(`--------------------------------`);
 });
 
 module.exports = app; 

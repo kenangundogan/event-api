@@ -6,8 +6,8 @@ const {
     changePasswordSchema,
     forgotPasswordSchema,
     resetPasswordSchema
-} = require('../validations/authValidation');
-const { updateProfileSchema } = require('../validations/authValidation');
+} = require('../validations/auth');
+const { updateProfileSchema } = require('../validations/auth');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 

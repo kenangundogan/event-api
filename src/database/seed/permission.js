@@ -2,11 +2,11 @@ const Permission = require('../../models/Permission');
 
 const seedPermissions = async () => {
     try {
-        console.log('İzinler oluşturuluyor...');
+        console.log('Permissions seed işlemi başlatılıyor...');
 
         // Mevcut izinleri temizle
         await Permission.deleteMany({});
-        console.log('Mevcut izinler temizlendi');
+        console.log('Mevcut permissions temizlendi');
 
         // Varsayılan izinleri oluştur
         const permissions = [
@@ -128,7 +128,7 @@ const seedPermissions = async () => {
         ];
 
         const createdPermissions = await Permission.insertMany(permissions);
-        console.log(`İzinler başarıyla oluşturuldu! (${createdPermissions.length})`, createdPermissions.map(p => p.resource + ':' + p.action));
+        console.log(`Permissions başarıyla oluşturuldu! (${createdPermissions.length})`, createdPermissions.map(p => p.resource + ':' + p.action));
         console.log(`----------------------------------------------------------------`);
     } catch (error) {
         console.error('Hata:', error.message);

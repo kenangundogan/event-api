@@ -4,14 +4,14 @@ const Permission = require('../../models/Permission');
 
 const seedRoles = async () => {
     try {
-        console.log('Roller oluşturuluyor...');
+        console.log('Roles seed işlemi başlatılıyor...');
 
         // Mevcut rolleri temizle
         await Role.deleteMany({});
-        console.log('Mevcut roller temizlendi');
+        console.log('Mevcut roles temizlendi');
 
         // Önce izinleri al
-        const permissions = await Permission.find({ isActive: true });
+        const permissions = await Permission.find();
         const permissionMap = {};
         permissions.forEach(p => {
             permissionMap[p.name] = p._id;
@@ -84,10 +84,10 @@ const seedRoles = async () => {
 
         // Rolleri kaydet
         const createdRoles = await Role.insertMany(roles);
-        console.log(`Roller başarıyla oluşturuldu! (${createdRoles.length})`, createdRoles.map(r => r.name));
+        console.log(`Roles başarıyla oluşturuldu! (${createdRoles.length})`, createdRoles.map(r => r.name));
         console.log(`----------------------------------------------------------------`);
     } catch (error) {
-        console.error('Seed hatası:', error);
+        console.error('Hata:', error.message);
         throw error;
     }
 };

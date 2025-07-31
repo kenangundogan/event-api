@@ -66,12 +66,9 @@ const userSchema = new mongoose.Schema({
         }
     }
 }, {
-    timestamps: true, // createdAt ve updatedAt alanlarını otomatik ekler
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    timestamps: true
 });
 
-// Index'ler
 userSchema.index({ createdAt: -1 });
 
 // Password hash middleware
@@ -88,63 +85,5 @@ userSchema.pre('save', async function (next) {
     }
 });
 
-// Password karşılaştırma metodu
-userSchema.methods.comparePassword = async function (candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
-};
-
-// User'ı JSON'a çevirirken hassas bilgileri çıkar
-userSchema.methods.toJSON = function () {
-    const user = this.toObject();
-    delete user.password;
-    return user;
-};
-
-// User'ı response için hazırla (şifre hariç)
-userSchema.methods.toResponse = function () {
-    const user = this.toObject();
-    delete user.password;
-    return user;
-};
-
-// Instance method - son giriş zamanını güncelle
-userSchema.methods.updateLastLogin = function () {
-    this.lastLogin = new Date();
-    return this.save();
-};
-
-// Static method - email ile kullanıcı bul
-userSchema.statics.findByEmail = function (email) {
-    return this.findOne({ email: email.toLowerCase() });
-};
-
-// Static method - aktif kullanıcıları getir
-userSchema.statics.findActive = function () {
-    return this.find({ isActive: true });
-};
-
-// Instance method - kullanıcının izin kontrolü
-userSchema.methods.hasPermission = async function (permission) {
-    await this.populate('role');
-    return this.role && this.role.hasPermission(permission);
-};
-
-// Instance method - birden fazla izin kontrolü
-userSchema.methods.hasAnyPermission = async function (permissions) {
-    await this.populate('role');
-    return this.role && this.role.hasAnyPermission(permissions);
-};
-
-// Instance method - tüm izinleri kontrol et
-userSchema.methods.hasAllPermissions = async function (permissions) {
-    await this.populate('role');
-    return this.role && this.role.hasAllPermissions(permissions);
-};
-
-// Instance method - kullanıcının rol adını getir
-userSchema.methods.getRoleName = async function () {
-    await this.populate('role');
-    return this.role ? this.role.name : null;
-};
 
 module.exports = mongoose.model('User', userSchema); 

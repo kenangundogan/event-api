@@ -5,12 +5,12 @@ const User = require('../models/User');
 const authenticateToken = async (req, res, next) => {
     try {
         const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+        const token = authHeader && authHeader.split(' ')[1];
 
         if (!token) {
             return res.status(401).json({
                 success: false,
-                message: 'Erişim token\'ı gerekli'
+                message: 'Erişim token gerekli'
             });
         }
 
@@ -39,14 +39,14 @@ const authenticateToken = async (req, res, next) => {
         if (error.name === 'JsonWebTokenError') {
             return res.status(401).json({
                 success: false,
-                message: 'Geçersiz token'
+                message: 'Token geçersiz'
             });
         }
 
         if (error.name === 'TokenExpiredError') {
             return res.status(401).json({
                 success: false,
-                message: 'Token süresi dolmuş'
+                message: 'Token süresi doldu'
             });
         }
 
@@ -75,7 +75,7 @@ const authorizeRoles = (roles) => {
       if (!user || !user.role) {
         return res.status(403).json({
           success: false,
-          message: 'Bu işlem için yetkiniz bulunmuyor'
+          message: 'Bu işlem için yetkiniz yok'
         });
       }
 
@@ -86,7 +86,7 @@ const authorizeRoles = (roles) => {
 
       return res.status(403).json({
         success: false,
-        message: 'Bu işlem için yetkiniz bulunmuyor'
+        message: 'Bu işlem için yetkiniz yok'
       });
     } catch (error) {
       return res.status(500).json({
@@ -115,7 +115,7 @@ const authorizePermission = (permission) => {
       if (!user || !user.role) {
         return res.status(403).json({
           success: false,
-          message: 'Bu işlem için yetkiniz bulunmuyor'
+          message: 'Bu işlem için yetkiniz yok'
         });
       }
 
@@ -155,7 +155,7 @@ const authorizeAnyPermission = (permissions) => {
       if (!user || !user.role) {
         return res.status(403).json({
           success: false,
-          message: 'Bu işlem için yetkiniz bulunmuyor'
+          message: 'Bu işlem için yetkiniz yok'
         });
       }
 
@@ -201,7 +201,7 @@ const authorizeSelfOrAdmin = (req, res, next) => {
 
     return res.status(403).json({
         success: false,
-        message: 'Bu işlem için yetkiniz bulunmuyor'
+        message: 'Bu işlem için yetkiniz yok'
     });
 };
 

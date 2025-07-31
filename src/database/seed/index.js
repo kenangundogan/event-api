@@ -1,22 +1,21 @@
 const connectDB = require('../../config/database');
-const seedPermissions = require('./seedPermissions');
-const seedRoles = require('./seedRoles');
-const seedUsers = require('./seedUsers');
+const seedGenders = require('./gender');
+const seedPermissions = require('./permission');
+const seedRoles = require('./role');
+const seedUsers = require('./user');
 
 const runAllSeeds = async () => {
     try {
-        console.log('Seed işlemi başlatılıyor...\n');
+        console.log('Seed işlemi başlatılıyor...');
 
-        // Veritabanı bağlantısını kur
         await connectDB();
 
-        // 1. İzinleri oluştur
+        await seedGenders();
+
         await seedPermissions();
 
-        // 2. Rolleri oluştur
         await seedRoles();
 
-        // 3. Kullanıcıları oluştur
         await seedUsers();
 
         console.log('Tüm seed işlemleri başarıyla tamamlandı!');

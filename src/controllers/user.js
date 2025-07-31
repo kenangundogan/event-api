@@ -3,7 +3,7 @@ const {
     createUserSchema,
     updateUserSchema,
     userQuerySchema
-} = require('../validations/userValidation');
+} = require('../validations/user');
 const { queryBuilder } = require('../utils/queryBuilder');
 
 class UserController {

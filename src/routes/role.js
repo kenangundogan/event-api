@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const roleController = require('../controllers/roleController');
+const roleController = require('../controllers/role');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
-// Public routes (sadece varsayılan rol)
+// Public routes
 // Kullıcı oluşturulurken varsayılan rol gönderilir.
 router.get('/default', roleController.getDefaultRole);
 

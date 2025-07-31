@@ -1,5 +1,5 @@
 const Role = require('../models/Role');
-const { createRoleSchema, updateRoleSchema } = require('../validations/roleValidation');
+const { createRoleSchema, updateRoleSchema } = require('../validations/role');
 
 class RoleController {
     async getAll(req, res) {

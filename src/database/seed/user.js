@@ -3,18 +3,14 @@ const Role = require('../../models/Role');
 
 const seedUsers = async () => {
     try {
-        console.log('Kullanıcılar oluşturuluyor...');
+        console.log('Users seed işlemi başlatılıyor...');
 
         // Mevcut kullanıcıları temizle
         await User.deleteMany({});
-        console.log('Mevcut kullanıcılar temizlendi');
+        console.log('Mevcut users temizlendi');
 
         // Rolleri al
         const roles = await Role.find({});
-
-        if (!roles) {
-            throw new Error('Gerekli roller bulunamadı! Önce rolleri oluşturun.');
-        }
 
         // Varsayılan kullanıcıları oluştur
         const users = [
@@ -79,7 +75,7 @@ const seedUsers = async () => {
             createdUsers.push(user);
         }
         
-        console.log(`Kullanıcılar başarıyla oluşturuldu! (${createdUsers.length})`);
+        console.log(`Users başarıyla oluşturuldu! (${createdUsers.length})`);
         createdUsers.forEach(user => {
             const role = roles.find(r => r._id.toString() === user.role.toString());
             console.log(` - ${user.email} (${role ? role.name : 'role yok'})`);
